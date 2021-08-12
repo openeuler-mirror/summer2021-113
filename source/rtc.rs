@@ -40,10 +40,10 @@ const RTC_DAY_OF_WEAK: u8 = 0x06;
 const RTC_DAY_OF_MONTH: u8 = 0x07;
 const RTC_MONTH: u8 = 0x08;
 const RTC_YEAR: u8 = 0x09;
-const RTC_REG_A: u8 = 0x0A;
-const RTC_REG_B: u8 = 0x0B;
-const RTC_REG_C: u8 = 0x0C;
-const RTC_REG_D: u8 = 0x0D;
+const RTC_REG_A: u8 = 0x0A;  //频率选择
+const RTC_REG_B: u8 = 0x0B;  //控制
+const RTC_REG_C: u8 = 0x0C;  //中断标志
+const RTC_REG_D: u8 = 0x0D;  //有效性
 const RTC_CENTURY_BCD: u8 = 0x32;
 
 // Index of memory data in RTC static RAM.
@@ -57,6 +57,31 @@ const CMOS_ACTUAL_EXT_MEM: (u8, u8) = (0x30, 0x31);
 const CMOS_MEM_BELOW_4GB: (u8, u8) = (0x34, 0x35);
 // 0x5B/0x5C/0x5D stores low/middle/high byte of memory above 4GB, unit is 64KB.
 const CMOS_MEM_ABOVE_4GB: (u8, u8, u8) = (0x5B, 0x5C, 0x5D);
+
+//  中断 先关的一些寄存器
+const RTC_IRQF: u8 = 0x80;
+const RTC_PF: u8 = 0x40;
+const RTC_AF: u8 = 0x20;
+const RTC_UF: u8 = 0x10;
+
+
+//仿照/include/linux/rtc.h的结构体，后续应该可以用libc::来代替
+pub struct RTCTM {
+    tm_sec: i64,
+    tm_min: i64,
+    tm_hour: i64,
+    tm_mday: i64,
+    tm_mon: i64,
+    tm_year: i64,
+    tm_wday: i64,
+    tm_yday: i64,
+    tm_isdst: i64,
+}
+pub struct RTCWKALRM {
+    enabled: u8,
+    pending: u8,
+    time: RTCTM,
+}
 
 fn get_utc_time() -> libc::tm {
     let time_val: libc::time_t = 0_i64;
@@ -159,8 +184,8 @@ impl RTC {
             self.cmos_data[CMOS_MEM_ABOVE_4GB.2 as usize] = (mem_data >> 16) as u8;
         }
     }
-
-    fn read_data(&self, data: &mut [u8]) -> bool {
+    // 从宿主机获取时间写入  更新RTC时间
+    fn read_data(&self, data: &mut [u8]) -> bool {                  
         if data.len() != 1 {
             error!("RTC only supports reading data byte by byte.");
             return false;
@@ -174,7 +199,7 @@ impl RTC {
             RTC_MINUTES => {
                 data[0] = bin_to_bcd(tm.tm_min as u8);
             }
-            RTC_HOURS => {
+            RTC_HOURS => {   //需要24/12小时的适配
                 data[0] = bin_to_bcd(tm.tm_hour as u8);
             }
             RTC_DAY_OF_WEAK => {
@@ -231,6 +256,13 @@ impl RTC {
         sysbus.attach_device(&dev, region_base, region_size)?;
         Ok(())
     }
+
+    fn get_next_alarm(&self) {  //https://github.com/ahorn/benchmarks/blob/master/qemu-hw/rtc/mc146818rtc.c#L276
+        
+    }
+ 
+
+    
 }
 
 impl SysBusDevOps for RTC {
@@ -243,6 +275,7 @@ impl SysBusDevOps for RTC {
             data[0] = 0xFF;
             false
         } else {
+            debug!("read function call");
             self.read_data(data)
         }
     }
@@ -267,6 +300,7 @@ impl SysBusDevOps for RTC {
     fn get_type(&self) -> SysBusDevType {
         SysBusDevType::Rtc
     }
+
 }
 
 impl AmlBuilder for RTC {
