@@ -1,7 +1,7 @@
 # Exercise to Book Chapter mapping
 
 | Exercise               | Book Chapter |first|second df25684|
-|------------------------|--------------|-----||
+|------------------------|--------------|-----|---|
 | variables              | §3.1          |0704||
 | functions              | §3.3          |0704||
 | if                     | §3.5          |0704||
