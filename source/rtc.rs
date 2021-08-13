@@ -35,8 +35,8 @@ const RTC_SECONDS_ALARM: u8 = 0x01;
 const RTC_MINUTES: u8 = 0x02;
 const RTC_MINUTES_ALARM: u8 = 0x03;
 const RTC_HOURS: u8 = 0x04;
-const RTC_HOURS_ARARM: u8 = 0x05;
-const RTC_DAY_OF_WEAK: u8 = 0x06;
+const RTC_HOURS_ALARM: u8 = 0x05;
+const RTC_DAY_OF_WEEK: u8 = 0x06;    // RTC_DAY_OF_WEEK
 const RTC_DAY_OF_MONTH: u8 = 0x07;
 const RTC_MONTH: u8 = 0x08;
 const RTC_YEAR: u8 = 0x09;
@@ -66,21 +66,11 @@ const RTC_UF: u8 = 0x10;
 
 
 //仿照/include/linux/rtc.h的结构体，后续应该可以用libc::来代替
-pub struct RTCTM {
-    tm_sec: i64,
-    tm_min: i64,
-    tm_hour: i64,
-    tm_mday: i64,
-    tm_mon: i64,
-    tm_year: i64,
-    tm_wday: i64,
-    tm_yday: i64,
-    tm_isdst: i64,
-}
+
 pub struct RTCWKALRM {
     enabled: u8,
     pending: u8,
-    time: RTCTM,
+    time: libc::tm,
 }
 
 fn get_utc_time() -> libc::tm {
@@ -113,6 +103,11 @@ fn get_utc_time() -> libc::tm {
 /// Transfer binary coded decimal to BCD coded decimal.
 fn bin_to_bcd(src: u8) -> u8 {
     ((src / 10) << 4) + (src % 10)
+}
+
+//与之对应
+fn bin_from_bcd(src:u8) -> u8 {
+    ((src >> 4) * 10) + (src & 0x0f)
 }
 
 #[allow(clippy::upper_case_acronyms)]
@@ -184,7 +179,7 @@ impl RTC {
             self.cmos_data[CMOS_MEM_ABOVE_4GB.2 as usize] = (mem_data >> 16) as u8;
         }
     }
-    // 从宿主机获取时间写入  更新RTC时间
+    // guest从host获取时间写入   除此以外还可以用来 更新RTC时间  
     fn read_data(&self, data: &mut [u8]) -> bool {                  
         if data.len() != 1 {
             error!("RTC only supports reading data byte by byte.");
@@ -202,8 +197,8 @@ impl RTC {
             RTC_HOURS => {   //需要24/12小时的适配
                 data[0] = bin_to_bcd(tm.tm_hour as u8);
             }
-            RTC_DAY_OF_WEAK => {
-                data[0] = bin_to_bcd((tm.tm_wday + 1) as u8);
+            RTC_DAY_OF_WEEK => {
+                data[10] = bin_to_bcd((tm.tm_wday + 1) as u8);
             }
             RTC_DAY_OF_MONTH => {
                 data[0] = bin_to_bcd(tm.tm_mday as u8);
@@ -232,7 +227,21 @@ impl RTC {
             return false;
         }
 
-        match self.cur_index {
+        match self.cur_index {     //参考cmos_ioport_write，进一步完善之中
+            RTC_SECONDS_ALARM | RTC_MINUTES_ALARM | RTC_HOURS_ALARM => {
+                self.cmos_data[self.cur_index as usize] = data[0];  //有可能欠考虑，考虑到read_data函数中的内容先选[0]
+                self.check_update_timer();
+            }
+            RTC_SECONDS | RTC_MINUTES | RTC_HOURS | RTC_MONTH | RTC_YEAR | RTC_DAY_OF_WEEK | RTC_DAY_OF_MONTH => {
+                self.set_time();
+                self.check_update_timer();
+            }
+            RTC_REG_A => {
+
+            }           
+            RTC_BEG_B => { //中断相关
+
+            }            
             RTC_REG_C | RTC_REG_D => {
                 warn!(
                     "Failed to write: read-only register, index {}, data {}",
@@ -256,7 +265,26 @@ impl RTC {
         sysbus.attach_device(&dev, region_base, region_size)?;
         Ok(())
     }
+     
+    // fn converthour(&self,hour:u8) -> u8 {
+    //     if !(self.cmos_data[RTC_REG_B] & REG_B_24h) {
+    //         hour %= 12;
+    //         if self.cmos_data[RTC_HOURS] & 0x80 {
+    //             hour += 12;
+    //         }
+    //     }
+    //     hour
+    // }
+    fn isrunning(&self) {
 
+    }
+
+    fn set_time(&self) {
+        
+    }
+    fn check_update_timer(&self){
+
+    }
     fn get_next_alarm(&self) {  //https://github.com/ahorn/benchmarks/blob/master/qemu-hw/rtc/mc146818rtc.c#L276
         
     }
@@ -275,7 +303,6 @@ impl SysBusDevOps for RTC {
             data[0] = 0xFF;
             false
         } else {
-            debug!("read function call");
             self.read_data(data)
         }
     }
@@ -299,6 +326,10 @@ impl SysBusDevOps for RTC {
 
     fn get_type(&self) -> SysBusDevType {
         SysBusDevType::Rtc
+    }
+
+    fn set_irq(&mut self,sysbus: &mut SysBus) -> Result<i32> {
+        Ok(0)
     }
 
 }

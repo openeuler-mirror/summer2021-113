@@ -11,10 +11,11 @@
 	目标是定时和报警、中断两个功能
 	
 	1. 给出了几个与中断相关的mc146818寄存器定义
-	2. 给出了rtc_time 和 alarm 的数据结构
-	3. 留出接口
+	2. 给出了alarm 的数据结构
+	3. 扩展已有的write_data功能
+	4. 留出接口
 	
-	
+* [第一次提pr](https://gitee.com/openeuler/stratovirt/pulls/269)
 	
 * [x86myconfig](./source/x86myconfig) 在启动standard_vm的时候用的，增加/dev/rtc和/dev/rtc0
  ![image-20210812114832401](README.assets/image-20210812114832401.png)

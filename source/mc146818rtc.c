@@ -317,7 +317,7 @@ static void check_update_timer(RTCState *s)
     }
 }
 
-static inline uint8_t convert_hour(RTCState *s, uint8_t hour)
+static inline uint8_t convert_hour(RTCState *s, uint8_t hour)   //24小时  12小时的转化
 {
     if (!(s->cmos_data[RTC_REG_B] & REG_B_24H)) {
         hour %= 12;
