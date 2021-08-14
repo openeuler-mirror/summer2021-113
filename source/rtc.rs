@@ -21,6 +21,7 @@ use sysbus::{SysBus, SysBusDevOps, SysBusDevType, SysRes};
 use vmm_sys_util::eventfd::EventFd;
 
 use super::errors::Result;
+use sysbus::errors::Error;
 
 /// IO port of RTC device to select Register to read/write.
 pub const RTC_PORT_INDEX: u64 = 0x70;
@@ -58,6 +59,8 @@ const CMOS_MEM_BELOW_4GB: (u8, u8) = (0x34, 0x35);
 // 0x5B/0x5C/0x5D stores low/middle/high byte of memory above 4GB, unit is 64KB.
 const CMOS_MEM_ABOVE_4GB: (u8, u8, u8) = (0x5B, 0x5C, 0x5D);
 
+
+const REG_B_SET: u8 = 0x80;
 //  中断 先关的一些寄存器
 const RTC_IRQF: u8 = 0x80;
 const RTC_PF: u8 = 0x40;
@@ -65,8 +68,8 @@ const RTC_AF: u8 = 0x20;
 const RTC_UF: u8 = 0x10;
 
 
-//仿照/include/linux/rtc.h的结构体，后续应该可以用libc::来代替
 
+//警告数据结构
 pub struct RTCWKALRM {
     enabled: u8,
     pending: u8,
@@ -194,7 +197,7 @@ impl RTC {
             RTC_MINUTES => {
                 data[0] = bin_to_bcd(tm.tm_min as u8);
             }
-            RTC_HOURS => {   //需要24/12小时的适配
+            RTC_HOURS => {   //启动项里边 显示仅支持24小时模式显示
                 data[0] = bin_to_bcd(tm.tm_hour as u8);
             }
             RTC_DAY_OF_WEEK => {
@@ -229,7 +232,7 @@ impl RTC {
 
         match self.cur_index {     //参考cmos_ioport_write，进一步完善之中
             RTC_SECONDS_ALARM | RTC_MINUTES_ALARM | RTC_HOURS_ALARM => {
-                self.cmos_data[self.cur_index as usize] = data[0];  //有可能欠考虑，考虑到read_data函数中的内容先选[0]
+                //self.cmos_data[self.cur_index as usize] = data[0];  //有可能欠考虑，考虑到read_data函数中的内容先选[0]
                 self.check_update_timer();
             }
             RTC_SECONDS | RTC_MINUTES | RTC_HOURS | RTC_MONTH | RTC_YEAR | RTC_DAY_OF_WEEK | RTC_DAY_OF_MONTH => {
@@ -266,17 +269,9 @@ impl RTC {
         Ok(())
     }
      
-    // fn converthour(&self,hour:u8) -> u8 {
-    //     if !(self.cmos_data[RTC_REG_B] & REG_B_24h) {
-    //         hour %= 12;
-    //         if self.cmos_data[RTC_HOURS] & 0x80 {
-    //             hour += 12;
-    //         }
-    //     }
-    //     hour
-    // }
-    fn isrunning(&self) {
 
+    fn isrunning(&self) -> bool{
+        ((self.cmos_data[RTC_REG_B as usize] & REG_B_SET) == 0) && ((self.cmos_data[RTC_REG_A as usize] & 0x70) <= 0x20)
     }
 
     fn set_time(&self) {
@@ -328,7 +323,7 @@ impl SysBusDevOps for RTC {
         SysBusDevType::Rtc
     }
 
-    fn set_irq(&mut self,sysbus: &mut SysBus) -> Result<i32> {
+    fn set_irq(&mut self,_sysbus: &mut SysBus) -> std::result::Result<i32, sysbus::errors::Error> {
         Ok(0)
     }
 
