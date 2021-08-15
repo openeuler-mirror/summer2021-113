@@ -3,17 +3,22 @@
 
 [项目来源](https://gitee.com/openeuler-competition/summer-2021/issues/I3Q0Q5)
 
+
+# 说明！！！！！！！！！
+# master 分支是资料说明  ， dev 分支是代码
+
 ## 主要工作
 
 #### 代码
 
-* [正在做的的dev分支rtc代码](./stratovirt/devices/src/legacy/rtc.rs)  
+* [正在做的的dev分支rtc代码](https://gitlab.summer-ospp.ac.cn/summer2021/210010500/-/blob/dev/devices/src/legacy/rtc.rs)  
 	目标是定时和报警、中断两个功能
 	1. 给出了几个与中断相关的mc146818寄存器定义
 	2. 给出了alarm 的数据结构
 	3. 扩展已有的write_data功能
 	4. 留出接口
-	运行方式详见 [stratovirt的README](./stratovirt/README.md)
+	
+	运行方式详见 [stratovirt的README](https://gitlab.summer-ospp.ac.cn/summer2021/210010500/-/blob/dev/README.md)
 	
 * [第一次提pr](https://gitee.com/openeuler/stratovirt/pulls/269)
 	
