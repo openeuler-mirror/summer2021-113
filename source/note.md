@@ -24,6 +24,27 @@ New /etc/adjtime data:
 1628903260
 UTC
 ```
+```
+[root@stratovirt ~]# dmesg | grep rtc
+[    4.128652] rtc_cmos 00:00: registered as rtc0
+[    4.158375] rtc_cmos 00:00: alarms up to one day, 242 bytes nvram
+[    4.422865] rtc_cmos 00:00: setting system clock to 1970-01-01 00:00:00 UTC (0)
+```
+```
+[root@stratovirt ~]# hwclock --verbose
+hwclock from util-linux 2.36.1
+System Time: 1628995303.541839
+Trying to open: /dev/rtc0
+Using the rtc interface to the clock.
+Last drift adjustment done at 0 seconds after 1969
+Last calibration done at 0 seconds after 1969
+Hardware clock is on unknown time
+Assuming hardware clock is kept in UTC time.
+Waiting for clock tick...
+hwclock: select() to /dev/rtc0 to wait for clock tick timed out
+...synchronization failed
+```
+
 
 1 guest从rtc 设备获取时间的实现
 
