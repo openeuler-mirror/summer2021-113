@@ -1,37 +1,50 @@
 # Summer2021-No.113 完善StratoVirt在x86_64平台上的RTC设备模拟
 
-#### 介绍
-https://gitee.com/openeuler-competition/summer-2021/issues/I3Q0Q5
 
-#### 软件架构
-软件架构说明
+[项目来源](https://gitee.com/openeuler-competition/summer-2021/issues/I3Q0Q5)
 
 
-#### 安装教程
+# 说明！！！！！！！！！
+# master 分支是资料说明  ， dev 分支是代码
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## 主要工作
 
-#### 使用说明
+#### 代码
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+* [正在做的的dev分支rtc代码](https://gitlab.summer-ospp.ac.cn/summer2021/210010500/-/blob/dev/devices/src/legacy/rtc.rs)  
+	目标是定时和报警、中断两个功能
+	1. 给出了几个与中断相关的mc146818寄存器定义
+	2. 给出了alarm 的数据结构
+	3. 扩展已有的write_data功能
+	4. 留出接口
+	
+	运行方式详见 [stratovirt的README](https://gitlab.summer-ospp.ac.cn/summer2021/210010500/-/blob/dev/README.md)
+	
+* [第一次提pr](https://gitee.com/openeuler/stratovirt/pulls/269)
+	
+* [x86myconfig](./source/x86myconfig) 在启动standard_vm的时候用的，增加/dev/rtc和/dev/rtc0
+ ![image-20210812114832401](README.assets/image-20210812114832401.png)
 
-#### 参与贡献
+* [rustlingexercises](./source/rustlingexercises)  学习Rust的时候的一个小练习[rustlings源仓库链接](https://github.com/rust-lang/rustlings)，我给出的答案
+ ![image-20210812114210826](README.assets/image-20210812114210826.png)
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+* [现有功能理解](./source/note.md)
+
+#### 博客
+* [源码编译OpenEuler-StratoVirt过程&&遇到问题及其解决方案](https://blog.csdn.net/qq_41675544/article/details/118734676?spm=1001.2014.3001.5501)
+* [stratovirt的dev分支运行指南](https://blog.csdn.net/qq_41675544/article/details/119175267?spm=1001.2014.3001.5501)
+* [为stratovirt的standard_vm编译openeuler的bzImage镜像](https://blog.csdn.net/qq_41675544/article/details/119281252?spm=1001.2014.3001.5501)
+* [Linux Inside的计时器和时间管理章节阅读笔记1](https://blog.csdn.net/qq_41675544/article/details/119488579?spm=1001.2014.3001.5501)
 
 
-#### 特技
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+
+
+
+
+
+
+
+
+
+
